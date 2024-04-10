@@ -1,0 +1,201 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+df = pd.read_stata(r"C:\Users\pacha\Downloads\ICPSR_36151-V6\ICPSR_36151\DS0002\36151-0002-Data.dta")
+
+df.dropna()
+
+# consumption of processed food in poor children
+
+processed = pd.DataFrame(data = [df.loc[:,'CO17'], df.loc[:,'CO19'], df.loc[:,'ID14']], index=["processed", "fruits", "activity"])
+
+#print(processed)
+
+
+fruits = [df.loc[:,'CO19']]
+
+fruits = np.array(fruits)
+
+fruits = fruits.reshape(42152,1).copy()
+
+fruits = pd.DataFrame(fruits)
+
+#print(fruits)
+
+print(fruits.describe(percentiles=[0.3,0.5,0.9])) # the 30% of the people at the lowest spending levels spend less than 25 per month. half of the people spend less than 100. the top 10% spends between 300 to 11000
+
+
+activity = [df.loc[:,'ID14']]
+
+l = []
+m =[]
+n =[]
+f =[]
+
+for i in range(42151):
+    if processed.loc['fruits',i]<100:        # will capture lower half of the distribution of money spent on fruits
+        l.append(processed.loc['processed',i])
+        m.append(i)
+        n.append(processed.loc['activity',i])
+        f.append(processed.loc['fruits',i])
+    else:
+        continue
+
+l = pd.Series(l)
+m = pd.Series(m)
+n = pd.Series(n)
+f = pd.Series(f)
+
+#print(n.describe())
+
+lowfruits = pd.DataFrame(data= [m, l, n, f], index=["i","processed", "activity", "fruits"])
+
+freqfruits = {}
+
+freqpros = {}
+
+for i in f:
+    if i in freqfruits:
+        freqfruits[i] = freqfruits[i] + 1
+    else:
+        freqfruits[i] = 1
+
+ff =[]
+
+fp =[]
+
+business = []
+
+farm = []
+
+landpay = []
+
+ownshare = []
+
+sold = []
+
+for i in l:
+    if i in freqpros:
+        freqpros[i] = freqpros[i] + 1
+    else:
+        freqpros[i] = 1
+
+    business.append(df.loc[i,'NF5'])
+
+    farm.append(df.loc[i,'FM1'])
+
+    landpay.append(df.loc[i,'FM15B'])
+
+    ownshare.append(df.loc[i,'FM26C'])
+
+    sold.append(df.loc[i,'FM26B'])
+
+
+
+
+
+l = l.drop_duplicates()
+f = f.drop_duplicates()
+
+for i in f:
+    ff.append(freqfruits[i])
+
+ff = pd.DataFrame(ff)
+
+for i in l:
+    fp.append(freqpros[i])
+
+fp = pd.DataFrame(fp)
+
+
+f = np.array(f)
+l = np.array(l)
+
+#fruitspent = np.hstack((f,ff))
+
+#print(freqpros)
+ff = np.array(ff.loc[:,0])
+fp = np.array(fp.loc[:,0])
+
+f = f.astype(int)
+l = l.astype(int)
+#print(f)
+
+fruitspend = np.vstack((f,ff))
+
+processpend = np.vstack((l,fp))
+
+fruitspend = pd.DataFrame(fruitspend)
+
+processpend = pd.DataFrame(processpend)
+
+fig,(ax1, ax2) = plt.subplots(2,1)
+
+ax1.scatter(fruitspend.loc[0,:], fruitspend.loc[1,:])
+ax2.scatter(processpend.loc[0,:], processpend.loc[1,:], s=1)
+
+#print(processpend.loc[0,:].value_counts())
+
+business = pd.DataFrame(business)
+
+business.dropna(inplace=True)
+
+buspm = business/12  #earning per month
+
+#print(buspm)    #out of 19560 households spending less than 100 per month on fruits only 745 had some business income last year
+
+farm = pd.DataFrame(farm)
+
+farm.dropna(inplace=True)
+
+landpay = pd.DataFrame(landpay)
+
+#landpay.dropna(inplace=True)
+
+ownshare = pd.DataFrame(ownshare)
+
+ownshare.dropna(inplace=True)
+
+sold = pd.DataFrame(sold)
+
+sold.dropna(inplace=True)
+
+#print(ownshare.describe()) # crop residue kept for own use
+
+#print(sold.describe()) #as many as 75% of people did not sell any of the crop residue
+
+#print(landpay) #unable to interpret as most of the data is Nan
+
+#print(farm.describe())  #as expected most of the families out of 19560, spending less on fruits are related to agriculture work (17973), so much extra spending is not needed
+
+
+
+#plt.show()
+
+#print(processpend)
+
+#print(freqfruits)
+
+
+
+
+
+#print(activity)
+
+#processcol = pd.DataFrame(processed.index)
+
+#fcol = pd.DataFrame(fruits.index)
+
+#actcol = pd.DataFrame(activity.index)
+
+#processed.insert(0,"pcol",processcol)
+
+#fruits.insert(0,"fcol", fcol)
+
+#activity.insert(0,"actcol", actcol)
+
+#total = activity.merge(fruits, left_on="actcol", right_on="fcol")
+
+#print(total)
+#print(fruits.describe())
